@@ -42,7 +42,11 @@ def render(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: create tables if they don't exist
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"WARNING: Could not create tables: {e}")
+        print("The app will still serve requests. Make sure DATABASE_URL is set correctly.")
     yield
     # Shutdown: nothing to clean up
 
@@ -55,7 +59,10 @@ app = FastAPI(title="Accounts Tracker", lifespan=lifespan)
 # ── Static Files ───────────────────────────────────────────────────
 
 if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    try:
+        app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    except Exception:
+        pass  # Vercel serverless doesn't support StaticFiles mount
 
 
 # ── Middleware: Load user into request.state ────────────────────────
@@ -90,6 +97,13 @@ app.include_router(payments.router)
 app.include_router(expenses.router)
 app.include_router(reports.router)
 app.include_router(settings.router)
+
+
+# ── Health Check ──────────────────────────────────────────────────
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "app": "Accounts Tracker"}
 
 
 # ── Root Redirect ──────────────────────────────────────────────────
