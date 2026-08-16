@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -28,14 +28,15 @@ jinja_env = Environment(
 
 def render(
     request: Request, template_name: str, **context
-) -> str:
+) -> HTMLResponse:
     """Render a Jinja2 template with common context variables."""
     tpl = jinja_env.get_template(template_name)
-    return tpl.render(
+    content = tpl.render(
         request=request,
         user=getattr(request.state, "user", None),
         **context,
     )
+    return HTMLResponse(content=content)
 
 
 # ── Lifespan ───────────────────────────────────────────────────────
