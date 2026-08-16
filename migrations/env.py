@@ -1,5 +1,5 @@
 """
-Alembic environment configuration.
+Alembic environment configuration — works with both SQLite and PostgreSQL.
 """
 from logging.config import fileConfig
 
@@ -10,8 +10,14 @@ from app.database import Base
 from app.models import *  # noqa: F401, F403 — ensure all models are loaded
 from app.config import settings as app_settings
 
+DATABASE_URL = app_settings.DATABASE_URL
+
+# If it's a file path (SQLite), prefix with sqlite:///
+if not DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = f"sqlite:///{DATABASE_URL}"
+
 config = context.config
-config.set_main_option("sqlalchemy.url", f"sqlite:///{app_settings.DATABASE_URL}")
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
