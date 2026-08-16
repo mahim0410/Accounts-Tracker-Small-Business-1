@@ -3,7 +3,7 @@ uvicorn[standard]==0.30.*
 sqlalchemy==2.0.*
 alembic==1.13.*
 aiosqlite
-passlib[bcrypt]==1.7.*
+bcrypt==4.0.*
 python-multipart
 itsdangerous
 jinja2

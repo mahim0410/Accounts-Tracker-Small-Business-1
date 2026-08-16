@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Expenses — Accounts Tracker{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+    <h2 style="margin: 0;">Expenses</h2>
+    <button class="primary" onclick="openModal('add-expense-modal')">+ Add Expense</button>
+</div>
+
+<!-- Filters -->
+<form method="GET" action="/expenses">
+    <div class="grid" style="grid-template-columns: 1fr auto auto auto; gap: 0.5rem; margin: 1rem 0;">
+        <input type="search" name="search" placeholder="Search by description..." value="{{ search }}">
+        <select name="category">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat|capitalize }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="date_from" value="{{ date_from }}" placeholder="From">
+        <input type="date" name="date_to" value="{{ date_to }}" placeholder="To">
+        <button type="submit" class="secondary outline small">Filter</button>
+    </div>
+</form>
+
+<!-- Expenses Table -->
+<div style="overflow-x: auto;">
+{% if expenses %}
+<table role="grid">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for expense in expenses %}
+        <tr>
+            <td>{{ expense.date }}</td>
+            <td><span class="badge badge-category">{{ expense.category|capitalize }}</span></td>
+            <td><strong>৳{{ "%.2f"|format(expense.amount) }}</strong></td>
+            <td>{{ expense.description or '—' }}</td>
+            <td>
+                <div style="display: flex; gap: 0.25rem;">
+                    <button class="secondary outline small" onclick="openEditExpenseModal({{ expense.id }}, '{{ expense.category }}', {{ expense.amount }}, '{{ expense.date }}', '{{ expense.description|e }}')" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Edit</button>
+                    <form method="POST" action="/expenses/delete/{{ expense.id }}" style="display: inline;" onsubmit="return confirm('Delete this expense?')">
+                        <button class="secondary outline small" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; color: var(--pico-del-color);">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<article style="text-align: center; color: var(--pico-muted-color);">
+    <p>No expenses found. <a href="#" onclick="openModal('add-expense-modal')">Add your first expense</a>.</p>
+</article>
+{% endif %}
+</div>
+
+<!-- Add Expense Modal -->
+<dialog id="add-expense-modal">
+    <article>
+        <header>
+            <h3>Add Expense</h3>
+            <button aria-label="Close" class="outline" onclick="closeModal('add-expense-modal')" style="float: right;">✕</button>
+        </header>
+        <form method="POST" action="/expenses/add">
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <label>Category
+                    <select name="category" required>
+                        <option value="">— Select —</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Amount (৳)
+                    <input type="number" step="0.01" min="0.01" name="amount" required placeholder="0.00">
+                </label>
+                <label>Date
+                    <input type="date" name="date_str" required value="{{ today }}">
+                </label>
+            </div>
+            <label>Description <small>(optional)</small>
+                <textarea name="description" rows="3" placeholder="Describe the expense"></textarea>
+            </label>
+            <footer style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="secondary" type="button" onclick="closeModal('add-expense-modal')">Cancel</button>
+                <button type="submit">Save</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+
+<!-- Edit Expense Modal -->
+<dialog id="edit-expense-modal">
+    <article>
+        <header>
+            <h3>Edit Expense</h3>
+            <button aria-label="Close" class="outline" onclick="closeModal('edit-expense-modal')" style="float: right;">✕</button>
+        </header>
+        <form method="POST" id="edit-expense-form">
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <label>Category
+                    <select name="category" id="edit-exp-category" required>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Amount (৳)
+                    <input type="number" step="0.01" min="0.01" name="amount" id="edit-exp-amount" required>
+                </label>
+                <label>Date
+                    <input type="date" name="date_str" id="edit-exp-date" required>
+                </label>
+            </div>
+            <label>Description <small>(optional)</small>
+                <textarea name="description" id="edit-exp-description" rows="3"></textarea>
+            </label>
+            <footer style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="secondary" type="button" onclick="closeModal('edit-expense-modal')">Cancel</button>
+                <button type="submit">Update</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEditExpenseModal(id, category, amount, date, description) {
+    document.getElementById('edit-expense-form').action = '/expenses/edit/' + id;
+    document.getElementById('edit-exp-category').value = category;
+    document.getElementById('edit-exp-amount').value = amount;
+    document.getElementById('edit-exp-date').value = date;
+    document.getElementById('edit-exp-description').value = description;
+    openModal('edit-expense-modal');
+}
+</script>
+{% endblock %}

@@ -4,23 +4,22 @@ Authentication — registration, login, logout, invite codes.
 from datetime import date, datetime, timedelta
 from typing import Optional
 
+import bcrypt
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.models import InviteCode, User, UserRole
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 serializer = URLSafeTimedSerializer(settings.SECRET_KEY, salt="auth")
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    return pwd_context.verify(password, hashed)
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 
 def create_session_token(user_id: int) -> str:

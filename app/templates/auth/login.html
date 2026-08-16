@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Login — Accounts Tracker{% endblock %}
+{% block content %}
+<div class="grid" style="justify-content: center; margin-top: 2rem;">
+    <article style="max-width: 400px;">
+        <hgroup>
+            <h2>Login</h2>
+            <p>Sign in to your account</p>
+        </hgroup>
+        <form method="POST" action="/auth/login">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required autocomplete="username" autofocus>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Your password" required autocomplete="current-password">
+
+            <button type="submit" class="primary">Sign In</button>
+        </form>
+        <p style="text-align: center; margin-top: 1rem;">
+            Don't have an account? <a href="/auth/register">Register</a>
+        </p>
+    </article>
+</div>
+{% endblock %}

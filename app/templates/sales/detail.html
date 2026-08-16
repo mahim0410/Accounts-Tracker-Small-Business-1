@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Sale #{{ sale.id }} — Details{% endblock %}
+{% block content %}
+<h2>Sale #{{ sale.id }}</h2>
+
+<article>
+    <table>
+        <tr><td><strong>Date</strong></td><td>{{ sale.date }}</td></tr>
+        <tr><td><strong>Customer</strong></td><td>{{ sale.party.name }}</td></tr>
+        <tr><td><strong>Item</strong></td><td>{{ sale.item.name }}</td></tr>
+        <tr><td><strong>Unit Price</strong></td><td>৳{{ "%.2f"|format(sale.unit_price) }}</td></tr>
+        <tr><td><strong>Quantity</strong></td><td>{{ "%.1f"|format(sale.quantity) }}</td></tr>
+        <tr><td><strong>Total Amount</strong></td><td><strong>৳{{ "%.2f"|format(sale.total_amount) }}</strong></td></tr>
+        <tr><td><strong>Cash Received</strong></td><td>৳{{ "%.2f"|format(sale.cash_received) }}</td></tr>
+        <tr><td><strong>AR Remaining</strong></td><td class="{% if ar_remaining > 0 %}ar-positive{% endif %}">৳{{ "%.2f"|format(ar_remaining) }}</td></tr>
+        <tr><td><strong>Notes</strong></td><td>{{ sale.notes or "—" }}</td></tr>
+    </table>
+</article>
+
+<p><a href="/sales">← Back to Sales</a></p>
+{% endblock %}

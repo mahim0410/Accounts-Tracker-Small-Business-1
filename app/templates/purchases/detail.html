@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Purchase #{{ purchase.id }} — Details{% endblock %}
+{% block content %}
+<h2>Purchase #{{ purchase.id }}</h2>
+
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <article>
+        <div class="label">Date</div>
+        <div>{{ purchase.date }}</div>
+    </article>
+    <article>
+        <div class="label">Supplier</div>
+        <div><strong>{{ purchase.party.name }}</strong></div>
+    </article>
+    <article>
+        <div class="label">Payment Method</div>
+        <div><span class="badge badge-{{ purchase.payment_method.value }}">{{ purchase.payment_method.value }}</span></div>
+    </article>
+    <article>
+        <div class="label">Total Cost</div>
+        <div style="font-size:1.5rem; font-weight:700;">৳{{ "%.2f"|format(purchase.total_cost) }}</div>
+    </article>
+</div>
+
+{% if purchase.notes %}
+<article>
+    <header><strong>Notes</strong></header>
+    <p>{{ purchase.notes }}</p>
+</article>
+{% endif %}
+
+<article>
+    <header><strong>Items</strong></header>
+    <table>
+        <thead><tr><th>Item</th><th>Quantity</th><th>Unit Cost</th><th>Total</th></tr></thead>
+        <tbody>
+        {% for line in purchase.lines %}
+        <tr>
+            <td>{{ line.item.name }}</td>
+            <td>{{ "%.1f"|format(line.quantity) }} {{ line.item.unit }}</td>
+            <td>৳{{ "%.2f"|format(line.unit_cost) }}</td>
+            <td>৳{{ "%.2f"|format(line.quantity * line.unit_cost) }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</article>
+
+<p><a href="/purchases">← Back to Purchases</a></p>
+{% endblock %}

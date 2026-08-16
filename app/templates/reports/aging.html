@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}AR/AP Aging — Reports{% endblock %}
+{% block content %}
+<h2>AR/AP Aging</h2>
+
+<div class="grid">
+    <!-- AR Aging -->
+    <article>
+        <header>
+            <strong>Accounts Receivable (Customers owe us)</strong>
+            <a href="/reports/aging/ar-csv" class="secondary outline" style="float:right;">📥 CSV</a>
+        </header>
+        {% if ar %}
+        <table>
+            <thead><tr><th>Party</th><th>Balance</th><th>Days</th><th>Bucket</th></tr></thead>
+            <tbody>
+            {% for r in ar %}
+            <tr>
+                <td>{{ r.party_name }}</td>
+                <td class="ar-positive">৳{{ "%.2f"|format(r.balance) }}</td>
+                <td>{{ r.days }}</td>
+                <td>{{ r.bucket }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot><tr><td><strong>Total AR</strong></td><td><strong>৳{{ "%.2f"|format(total_ar) }}</strong></td><td></td><td></td></tr></tfoot>
+        </table>
+        {% else %}<p>No outstanding receivables.</p>{% endif %}
+    </article>
+
+    <!-- AP Aging -->
+    <article>
+        <header>
+            <strong>Accounts Payable (We owe suppliers)</strong>
+            <a href="/reports/aging/ap-csv" class="secondary outline" style="float:right;">📥 CSV</a>
+        </header>
+        {% if ap %}
+        <table>
+            <thead><tr><th>Party</th><th>Balance</th><th>Days</th><th>Bucket</th></tr></thead>
+            <tbody>
+            {% for r in ap %}
+            <tr>
+                <td>{{ r.party_name }}</td>
+                <td class="ap-positive">৳{{ "%.2f"|format(r.balance) }}</td>
+                <td>{{ r.days }}</td>
+                <td>{{ r.bucket }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot><tr><td><strong>Total AP</strong></td><td><strong>৳{{ "%.2f"|format(total_ap) }}</strong></td><td></td><td></td></tr></tfoot>
+        </table>
+        {% else %}<p>No outstanding payables.</p>{% endif %}
+    </article>
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Inventory — Accounts Tracker{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+    <h2 style="margin: 0;">Inventory</h2>
+    <div style="display: flex; gap: 0.5rem;">
+        <button class="primary" onclick="openModal('add-item-modal')">+ Add Item</button>
+        <button class="secondary" onclick="openModal('stock-out-modal')">Stock Out</button>
+    </div>
+</div>
+
+<!-- Search & Filter -->
+<form method="GET" action="/inventory">
+    <div class="grid" style="grid-template-columns: 1fr auto auto; gap: 0.5rem; margin: 1rem 0;">
+        <input type="search" name="search" placeholder="Search inventory by name..." value="{{ search }}" hx-get="/inventory" hx-trigger="keyup changed delay:500ms" hx-target="#inventory-table" hx-select="#inventory-table" hx-swap="outerHTML">
+        <select name="type_filter" hx-get="/inventory" hx-trigger="change" hx-target="#inventory-table" hx-select="#inventory-table" hx-swap="outerHTML">
+            <option value="" {% if not type_filter %}selected{% endif %}>All Types</option>
+            <option value="finished" {% if type_filter == 'finished' %}selected{% endif %}>Finished</option>
+            <option value="raw_material" {% if type_filter == 'raw_material' %}selected{% endif %}>Raw Material</option>
+        </select>
+        <label style="display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
+            <input type="checkbox" name="low_stock_only" value="1" {% if low_stock_only %}checked{% endif %} hx-get="/inventory" hx-trigger="change" hx-target="#inventory-table" hx-select="#inventory-table" hx-swap="outerHTML">
+            Low Stock Only
+        </label>
+    </div>
+</form>
+
+<!-- Inventory Table -->
+<div id="inventory-table" style="overflow-x: auto;">
+{% if items %}
+<table role="grid">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>SKU</th>
+            <th>Type</th>
+            <th>Unit</th>
+            <th>Qty on Hand</th>
+            <th>Avg Cost</th>
+            <th>Value</th>
+            <th>Reorder Level</th>
+            <th>Stock</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td><a href="/inventory/detail/{{ item.id }}"><strong>{{ item.name }}</strong></a></td>
+            <td>{{ item.sku or '—' }}</td>
+            <td>{% if item.type.value == 'finished' %}Finished{% else %}Raw Material{% endif %}</td>
+            <td>{{ item.unit }}</td>
+            <td>{{ "%.2f"|format(item.quantity_on_hand) }}</td>
+            <td>৳{{ "%.2f"|format(item.average_cost) }}</td>
+            <td>৳{{ "%.2f"|format(item.value) }}</td>
+            <td>{{ "%.2f"|format(item.reorder_level) }}</td>
+            <td>
+                {% if item.quantity_on_hand <= 0 %}
+                <span>🔴</span>
+                {% elif item.is_low_stock %}
+                <span>🟡</span>
+                {% else %}
+                <span>🟢</span>
+                {% endif %}
+            </td>
+            <td>
+                <div style="display: flex; gap: 0.25rem;">
+                    <a href="/inventory/detail/{{ item.id }}" role="button" class="secondary outline small" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">View</a>
+                    <form method="POST" action="/inventory/delete/{{ item.id }}" style="display: inline;" onsubmit="return confirm('Delete {{ item.name|e }}?')">
+                        <button class="secondary outline small" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; color: var(--pico-del-color);">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<article style="text-align: center; color: var(--pico-muted-color);">
+    <p>No inventory items found. <a href="#" onclick="openModal('add-item-modal')">Add your first item</a>.</p>
+</article>
+{% endif %}
+</div>
+
+<!-- Add Item Modal -->
+<dialog id="add-item-modal">
+    <article>
+        <header>
+            <h3>Add Item</h3>
+            <button aria-label="Close" class="outline" onclick="closeModal('add-item-modal')" style="float: right;">✕</button>
+        </header>
+        <form method="POST" action="/inventory/add">
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <label>Name
+                    <input type="text" name="name" required placeholder="Item name">
+                </label>
+                <label>SKU <small>(optional)</small>
+                    <input type="text" name="sku" placeholder="e.g. SKU-001">
+                </label>
+                <label>Type
+                    <select name="type">
+                        <option value="finished">Finished</option>
+                        <option value="raw_material">Raw Material</option>
+                    </select>
+                </label>
+                <label>Unit
+                    <input type="text" name="unit" value="pcs" placeholder="pcs, kg, m">
+                </label>
+                <label>Sale Price (৳)
+                    <input type="number" step="0.01" min="0" name="sale_price" value="0">
+                </label>
+                <label>Reorder Level
+                    <input type="number" step="0.01" min="0" name="reorder_level" value="0">
+                </label>
+                <label style="grid-column: span 2;">Reorder Quantity
+                    <input type="number" step="0.01" min="0" name="reorder_quantity" value="0">
+                </label>
+            </div>
+            <footer style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="secondary" type="button" onclick="closeModal('add-item-modal')">Cancel</button>
+                <button type="submit">Save</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+
+<!-- Stock Out Modal -->
+<dialog id="stock-out-modal">
+    <article>
+        <header>
+            <h3>Stock Out Adjustment</h3>
+            <p style="margin: 0;">Record a reduction in inventory (e.g., damage, loss, sample).</p>
+            <button aria-label="Close" class="outline" onclick="closeModal('stock-out-modal')" style="float: right;">✕</button>
+        </header>
+        <form method="POST" action="/inventory/adjust-stock" id="stock-out-form">
+            <label for="so-item">Item</label>
+            <select id="so-item" name="item_id" required>
+                <option value="">— Select Item —</option>
+                {% for item in items %}
+                <option value="{{ item.id }}">{{ item.name }} ({{ "%.2f"|format(item.quantity_on_hand) }} {{ item.unit }})</option>
+                {% endfor %}
+            </select>
+
+            <label for="so-qty">Quantity to Remove</label>
+            <input type="number" id="so-qty" name="quantity" step="0.01" min="0.01" required placeholder="e.g. 5">
+
+            <label for="so-reason">Reason <small>(optional)</small></label>
+            <input type="text" id="so-reason" name="reason" placeholder="e.g. damaged, expired, sample">
+
+            <footer style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="secondary" type="button" onclick="closeModal('stock-out-modal')">Cancel</button>
+                <button type="submit" style="background: var(--pico-del-color);">Record Stock Out</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('stock-out-form')?.addEventListener('submit', function(e) {
+    var qty = parseFloat(document.getElementById('so-qty').value);
+    if (qty > 0) {
+        document.getElementById('so-qty').value = -qty;
+    }
+});
+</script>
+{% endblock %}

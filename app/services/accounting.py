@@ -10,8 +10,10 @@ from app.models import (
     Expense,
     Item,
     Party,
+    PartyType,
     PaymentIn,
     PaymentOut,
+    PaymentMethod,
     Purchase,
     PurchaseLine,
     Sale,
@@ -154,7 +156,7 @@ def compute_inventory_valuation(db: Session) -> list:
 
 def compute_aging(db: Session) -> dict:
     """Compute AR/AP aging per party."""
-    from datetime import timedelta
+    from datetime import date, timedelta
 
     today = date.today()
     parties = db.query(Party).filter(Party.is_deleted == False).all()

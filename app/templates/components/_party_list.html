@@ -1,0 +1,6 @@
+<!-- HTMX party search partial -->
+{% for party in parties %}
+<option value="{{ party.id }}">{{ party.name }}{% if party.contact %} ({{ party.contact }}){% endif %}</option>
+{% else %}
+<option value="">No parties found</option>
+{% endfor %}

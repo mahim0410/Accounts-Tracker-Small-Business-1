@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Accounts Tracker{% endblock %}
+{% block content %}
+<h2>Dashboard</h2>
+
+<!-- Summary Cards -->
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+    <article style="text-align: center;">
+        <small>Today's Cash</small>
+        <h1 style="margin: 0.25rem 0;">৳{{ "%.2f"|format(today_cash) }}</h1>
+        <small style="color: var(--pico-muted-color);">Cash in – Cash out</small>
+    </article>
+    <article style="text-align: center;">
+        <small>Inventory Value</small>
+        <h1 style="margin: 0.25rem 0;">৳{{ "%.2f"|format(inventory_value) }}</h1>
+        <small style="color: var(--pico-muted-color);">Stock on hand × avg cost</small>
+    </article>
+    <article style="text-align: center;">
+        <small>AR Balance</small>
+        <h1 style="margin: 0.25rem 0; color: var(--pico-del-color);">৳{{ "%.2f"|format(total_ar) }}</h1>
+        <small style="color: var(--pico-muted-color);">Accounts Receivable</small>
+    </article>
+    <article style="text-align: center;">
+        <small>AP Balance</small>
+        <h1 style="margin: 0.25rem 0; color: var(--pico-ins-color);">৳{{ "%.2f"|format(total_ap) }}</h1>
+        <small style="color: var(--pico-muted-color);">Accounts Payable</small>
+    </article>
+</div>
+
+<!-- Low Stock Alert -->
+{% if low_stock %}
+<article style="background: #fff3cd; border: 1px solid #ffc107;">
+    <strong>⚠️ Low Stock Alert</strong>
+    <p>The following items are below their reorder level:</p>
+    <ul>
+        {% for item in low_stock %}
+        <li><a href="/inventory/detail/{{ item.id }}">{{ item.name }}</a> — {{ "%.2f"|format(item.quantity_on_hand) }} {{ item.unit }} (Reorder at: {{ "%.2f"|format(item.reorder_level) }})</li>
+        {% endfor %}
+    </ul>
+</article>
+{% endif %}
+
+<!-- Recent Activity -->
+<h3>Recent Activity</h3>
+{% if recent %}
+<div style="overflow-x: auto;">
+    <table role="grid">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Party</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in recent %}
+            <tr>
+                <td>{{ entry.date }}</td>
+                <td>
+                    {% if entry.type == 'sale' %}
+                        <span>💰 Sale</span>
+                    {% elif entry.type == 'purchase' %}
+                        <span>📦 Purchase</span>
+                    {% elif entry.type == 'payment_in' %}
+                        <span>📥 Payment In</span>
+                    {% elif entry.type == 'payment_out' %}
+                        <span>📤 Payment Out</span>
+                    {% elif entry.type == 'expense' %}
+                        <span>💸 Expense</span>
+                    {% else %}
+                        <span>{{ entry.type }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ entry.party_name }}</td>
+                <td>৳{{ "%.2f"|format(entry.amount) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<article style="text-align: center; color: var(--pico-muted-color);">
+    <p>No recent activity found. Start by adding a <a href="/sales">sale</a> or <a href="/purchases">purchase</a>.</p>
+</article>
+{% endif %}
+{% endblock %}

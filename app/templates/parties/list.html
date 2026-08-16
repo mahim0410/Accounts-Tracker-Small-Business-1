@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Parties — Accounts Tracker{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+    <h2 style="margin: 0;">Parties</h2>
+    <button class="primary" onclick="openModal('add-party-modal')">+ Add Party</button>
+</div>
+
+<!-- Search & Filter -->
+<form method="GET" action="/parties" style="margin: 1rem 0;" hx-get="/parties" hx-trigger="keyup changed delay:500ms" hx-target="#parties-table" hx-select="#parties-table" hx-swap="outerHTML">
+    <div class="grid" style="grid-template-columns: 1fr auto; gap: 0.5rem;">
+        <input type="search" name="search" placeholder="Search parties by name..." value="{{ search }}" hx-get="/parties" hx-trigger="keyup changed delay:500ms" hx-target="#parties-table" hx-select="#parties-table" hx-swap="outerHTML">
+        <div style="display: flex; gap: 0.25rem; align-items: center;">
+            <a href="/parties?type_filter=" role="button" class="secondary outline small" style="font-size: 0.8rem;">All</a>
+            <a href="/parties?type_filter=customer" role="button" class="secondary outline small" style="font-size: 0.8rem;">Customers</a>
+            <a href="/parties?type_filter=supplier" role="button" class="secondary outline small" style="font-size: 0.8rem;">Suppliers</a>
+            <a href="/parties?type_filter=both" role="button" class="secondary outline small" style="font-size: 0.8rem;">Both</a>
+        </div>
+    </div>
+</form>
+
+<!-- Parties Table -->
+<div id="parties-table" style="overflow-x: auto;">
+{% if parties %}
+<table role="grid">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Contact</th>
+            <th>AR Balance</th>
+            <th>AP Balance</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for party in parties %}
+        <tr>
+            <td><strong>{{ party.name }}</strong></td>
+            <td>
+                {% if party.type.value == 'customer' %}
+                <span class="badge badge-customer">Customer</span>
+                {% elif party.type.value == 'supplier' %}
+                <span class="badge badge-supplier">Supplier</span>
+                {% else %}
+                <span class="badge badge-both">Both</span>
+                {% endif %}
+            </td>
+            <td>{{ party.contact or '—' }}</td>
+            <td>৳{{ "%.2f"|format(party.ar_balance) }}</td>
+            <td>৳{{ "%.2f"|format(party.ap_balance) }}</td>
+            <td>
+                <div style="display: flex; gap: 0.25rem;">
+                    <button class="secondary outline small" onclick="openEditPartyModal({{ party.id }}, '{{ party.name|e }}', '{{ party.type.value }}', '{{ party.contact|e }}')" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Edit</button>
+                    <form method="POST" action="/parties/delete/{{ party.id }}" style="display: inline;" onsubmit="return confirm('Delete {{ party.name|e }}?')">
+                        <button class="secondary outline small" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; color: var(--pico-del-color);">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<article style="text-align: center; color: var(--pico-muted-color);">
+    <p>No parties found. <a href="#" onclick="openModal('add-party-modal')">Add your first party</a>.</p>
+</article>
+{% endif %}
+</div>
+
+<!-- Add Party Modal -->
+<dialog id="add-party-modal">
+    <article>
+        <header>
+            <h3>Add Party</h3>
+            <button aria-label="Close" class="outline" onclick="closeModal('add-party-modal')" style="float: right;">✕</button>
+        </header>
+        <form method="POST" action="/parties/add">
+            <label for="add-name">Name</label>
+            <input type="text" id="add-name" name="name" required placeholder="Party name">
+
+            <label for="add-type">Type</label>
+            <select id="add-type" name="type">
+                <option value="customer">Customer</option>
+                <option value="supplier">Supplier</option>
+                <option value="both">Both</option>
+            </select>
+
+            <label for="add-contact">Contact <small>(optional)</small></label>
+            <input type="text" id="add-contact" name="contact" placeholder="Phone, email, or address">
+
+            <footer style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="secondary" type="button" onclick="closeModal('add-party-modal')">Cancel</button>
+                <button type="submit">Save</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+
+<!-- Edit Party Modal -->
+<dialog id="edit-party-modal">
+    <article>
+        <header>
+            <h3>Edit Party</h3>
+            <button aria-label="Close" class="outline" onclick="closeModal('edit-party-modal')" style="float: right;">✕</button>
+        </header>
+        <form method="POST" id="edit-party-form">
+            <label for="edit-name">Name</label>
+            <input type="text" id="edit-name" name="name" required>
+
+            <label for="edit-type">Type</label>
+            <select id="edit-type" name="type">
+                <option value="customer">Customer</option>
+                <option value="supplier">Supplier</option>
+                <option value="both">Both</option>
+            </select>
+
+            <label for="edit-contact">Contact <small>(optional)</small></label>
+            <input type="text" id="edit-contact" name="contact">
+
+            <footer style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="secondary" type="button" onclick="closeModal('edit-party-modal')">Cancel</button>
+                <button type="submit">Update</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEditPartyModal(id, name, type, contact) {
+    document.getElementById('edit-party-form').action = '/parties/edit/' + id;
+    document.getElementById('edit-name').value = name;
+    document.getElementById('edit-type').value = type;
+    document.getElementById('edit-contact').value = contact;
+    openModal('edit-party-modal');
+}
+</script>
+{% endblock %}

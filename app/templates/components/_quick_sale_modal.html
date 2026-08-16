@@ -1,0 +1,40 @@
+<!-- Quick Sale Modal (FAB) — duplicates the sale form for quick access -->
+<dialog id="sale-modal">
+    <article>
+        <header><strong>💰 New Sale</strong></header>
+        <form method="POST" action="/sales/add">
+            <div class="grid">
+                <label>Date <input type="date" name="date_str"></label>
+                <label>Customer
+                    <select name="party_id" required>
+                        <option value="">Select customer...</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="grid">
+                <label>Item
+                    <select name="item_id" required>
+                        <option value="">Select item...</option>
+                        {% for i in items %}
+                        <option value="{{ i.id }}">{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Unit Price (৳) <input type="number" name="unit_price" step="0.01" min="0" required></label>
+            </div>
+            <div class="grid">
+                <label>Quantity <input type="number" name="quantity" step="0.01" min="0.01" required></label>
+                <label>Total (৳) <input type="number" name="total_amount" step="0.01" min="0" required></label>
+            </div>
+            <label>Cash Received (৳) <input type="number" name="cash_received" step="0.01" min="0" value="0"></label>
+            <label>Notes <textarea name="notes" rows="2"></textarea></label>
+            <footer>
+                <button type="submit">Record Sale</button>
+                <button type="button" class="secondary" onclick="closeModal('sale-modal')">Cancel</button>
+            </footer>
+        </form>
+    </article>
+</dialog>

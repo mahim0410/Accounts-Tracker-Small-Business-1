@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name }} — Inventory — Accounts Tracker{% endblock %}
+{% block content %}
+
+<nav>
+    <ul>
+        <li><a href="/inventory">← Back to Inventory</a></li>
+    </ul>
+</nav>
+
+<h2>{{ item.name }}</h2>
+
+<!-- Item Details -->
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+    <article>
+        <small>SKU</small>
+        <p><strong>{{ item.sku or '—' }}</strong></p>
+    </article>
+    <article>
+        <small>Type</small>
+        <p><strong>{% if item.type.value == 'finished' %}Finished{% else %}Raw Material{% endif %}</strong></p>
+    </article>
+    <article>
+        <small>Unit</small>
+        <p><strong>{{ item.unit }}</strong></p>
+    </article>
+    <article>
+        <small>Quantity on Hand</small>
+        <p><strong>{{ "%.2f"|format(item.quantity_on_hand) }}</strong></p>
+    </article>
+    <article>
+        <small>Average Cost</small>
+        <p><strong>৳{{ "%.2f"|format(item.average_cost) }}</strong></p>
+    </article>
+    <article>
+        <small>Sale Price</small>
+        <p><strong>৳{{ "%.2f"|format(item.sale_price) }}</strong></p>
+    </article>
+    <article>
+        <small>Reorder Level</small>
+        <p><strong>{{ "%.2f"|format(item.reorder_level) }}</strong></p>
+    </article>
+    <article>
+        <small>Reorder Qty</small>
+        <p><strong>{{ "%.2f"|format(item.reorder_quantity) }}</strong></p>
+    </article>
+</div>
+
+<!-- Stock Summary -->
+<div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+    <article style="text-align: center;">
+        <small>Total Units Purchased</small>
+        <h3>{{ "%.2f"|format(item.total_units_purchased) }}</h3>
+    </article>
+    <article style="text-align: center;">
+        <small>Total Units Sold</small>
+        <h3>{{ "%.2f"|format(item.total_units_sold) }}</h3>
+    </article>
+    <article style="text-align: center;">
+        <small>Variance</small>
+        <h3 style="color: {% if (item.total_units_purchased - item.total_units_sold - item.quantity_on_hand) != 0 %}var(--pico-del-color){% else %}var(--pico-ins-color){% endif %};">
+            {{ "%.2f"|format(item.total_units_purchased - item.total_units_sold - item.quantity_on_hand) }}
+        </h3>
+    </article>
+</div>
+
+<!-- Purchase History -->
+<h3>Purchase History</h3>
+{% if history.purchases %}
+<div style="overflow-x: auto;">
+    <table role="grid">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Supplier</th>
+                <th>Qty</th>
+                <th>Unit Cost</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pl in history.purchases %}
+            <tr>
+                <td>{{ pl.date }}</td>
+                <td>{{ pl.supplier }}</td>
+                <td>{{ "%.2f"|format(pl.quantity) }}</td>
+                <td>৳{{ "%.2f"|format(pl.unit_cost) }}</td>
+                <td>৳{{ "%.2f"|format(pl.total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<article style="text-align: center; color: var(--pico-muted-color);">
+    <p>No purchase history for this item.</p>
+</article>
+{% endif %}
+
+<!-- Sale History -->
+<h3>Sale History</h3>
+{% if history.sales %}
+<div style="overflow-x: auto;">
+    <table role="grid">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in history.sales %}
+            <tr>
+                <td>{{ s.date }}</td>
+                <td>{{ s.customer }}</td>
+                <td>{{ "%.2f"|format(s.quantity) }}</td>
+                <td>৳{{ "%.2f"|format(s.unit_price) }}</td>
+                <td>৳{{ "%.2f"|format(s.total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<article style="text-align: center; color: var(--pico-muted-color);">
+    <p>No sale history for this item.</p>
+</article>
+{% endif %}
+
+<!-- Stock Adjustments -->
+<h3>Stock Adjustments</h3>
+{% if history.adjustments %}
+<div style="overflow-x: auto;">
+    <table role="grid">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Qty</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for adj in history.adjustments %}
+            <tr>
+                <td>{{ adj.date }}</td>
+                <td style="color: {% if adj.quantity < 0 %}var(--pico-del-color){% else %}var(--pico-ins-color){% endif %};">
+                    {{ "%+.2f"|format(adj.quantity) }}
+                </td>
+                <td>{{ adj.reason or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<article style="text-align: center; color: var(--pico-muted-color);">
+    <p>No stock adjustments recorded.</p>
+</article>
+{% endif %}
+
+{% endblock %}

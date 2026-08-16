@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Register — Accounts Tracker{% endblock %}
+{% block content %}
+<div class="grid" style="justify-content: center; margin-top: 2rem;">
+    <article style="max-width: 450px;">
+        <hgroup>
+            <h2>Register</h2>
+            <p>Create a new account</p>
+        </hgroup>
+        <form method="POST" action="/auth/register">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Choose a name" required autocomplete="username" autofocus>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Choose a strong password" required autocomplete="new-password">
+
+            {% if not first_user %}
+            <label for="invite_code">Invite Code <small>(required for non-owner accounts)</small></label>
+            <input type="text" id="invite_code" name="invite_code" placeholder="Enter invite code" autocomplete="off">
+            {% endif %}
+
+            <button type="submit" class="primary">Register</button>
+        </form>
+        <p style="text-align: center; margin-top: 1rem;">
+            Already have an account? <a href="/auth/login">Login</a>
+        </p>
+    </article>
+</div>
+{% endblock %}

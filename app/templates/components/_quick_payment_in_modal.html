@@ -1,0 +1,31 @@
+<!-- Quick Payment In Modal -->
+<dialog id="payment-in-modal">
+    <article>
+        <header><strong>📥 Payment Received (Reduces AR)</strong></header>
+        <form method="POST" action="/payments/add-in">
+            <label>Customer
+                <select name="party_id" required>
+                    <option value="">Select customer...</option>
+                    {% for c in customers %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <div class="grid">
+                <label>Amount (৳) <input type="number" name="amount" step="0.01" min="0.01" required></label>
+                <label>Date <input type="date" name="date_str"></label>
+            </div>
+            <label>Method
+                <select name="method">
+                    <option value="cash">Cash</option>
+                    <option value="check">Check</option>
+                </select>
+            </label>
+            <label>Notes <textarea name="notes" rows="2"></textarea></label>
+            <footer>
+                <button type="submit">Record</button>
+                <button type="button" class="secondary" onclick="closeModal('payment-in-modal')">Cancel</button>
+            </footer>
+        </form>
+    </article>
+</dialog>

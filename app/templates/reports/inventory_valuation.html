@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Inventory Valuation — Reports{% endblock %}
+{% block content %}
+<h2>Inventory Valuation</h2>
+<p><a href="/reports/inventory-valuation/csv" role="button" class="secondary outline">📥 Download CSV</a></p>
+
+<div style="overflow-x: auto;">
+<table>
+    <thead>
+        <tr><th>Item</th><th>Type</th><th>Unit</th><th>Qty On Hand</th><th>Avg Cost</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td><strong>{{ item.name }}</strong></td>
+            <td><span class="badge badge-{% if item.type == 'finished' %}finished{% else %}raw{% endif %}">{{ item.type }}</span></td>
+            <td>{{ item.unit }}</td>
+            <td>{{ "%.1f"|format(item.quantity_on_hand) }}</td>
+            <td>৳{{ "%.2f"|format(item.average_cost) }}</td>
+            <td><strong>৳{{ "%.2f"|format(item.value) }}</strong></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr><td colspan="5"><strong>Total</strong></td><td><strong>৳{{ "%.2f"|format(total_value) }}</strong></td></tr>
+    </tfoot>
+</table>
+</div>
+{% endblock %}

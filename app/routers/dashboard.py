@@ -77,71 +77,56 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
 
 
 def _get_recent_activity(db: Session, limit: int = 15):
-    """Get the most recent transactions across all types."""
-    from sqlalchemy import union, literal_column
-
-    sales_q = db.query(
-        literal_column("'sale'").label("type"),
-        Sale.id,
-        Sale.date,
-        Sale.total_amount.label("amount"),
-        Sale.party_id,
-        Sale.is_deleted,
-    ).filter(Sale.is_deleted == False)
-
-    purchases_q = db.query(
-        literal_column("'purchase'").label("type"),
-        Purchase.id,
-        Purchase.date,
-        Purchase.total_cost.label("amount"),
-        Purchase.party_id,
-        Purchase.is_deleted,
-    ).filter(Purchase.is_deleted == False)
-
-    payments_in_q = db.query(
-        literal_column("'payment_in'").label("type"),
-        PaymentIn.id,
-        PaymentIn.date,
-        PaymentIn.amount,
-        PaymentIn.party_id,
-        PaymentIn.is_deleted,
-    ).filter(PaymentIn.is_deleted == False)
-
-    payments_out_q = db.query(
-        literal_column("'payment_out'").label("type"),
-        PaymentOut.id,
-        PaymentOut.date,
-        PaymentOut.amount,
-        PaymentOut.party_id,
-        PaymentOut.is_deleted,
-    ).filter(PaymentOut.is_deleted == False)
-
-    expenses_q = db.query(
-        literal_column("'expense'").label("type"),
-        Expense.id,
-        Expense.date,
-        Expense.amount,
-        literal_column("NULL").label("party_id"),
-        Expense.is_deleted,
-    ).filter(Expense.is_deleted == False)
-
-    union_q = sales_q.union_all(
-        purchases_q, payments_in_q, payments_out_q, expenses_q
-    ).order_by(literal_column("date").desc()).limit(limit)
-
-    rows = db.execute(union_q).fetchall()
-
+    """Get the most recent transactions across all types.
+    Fetches each type separately and merges in Python to avoid SQL UNION column aliasing issues.
+    """
+    from datetime import date as dt_date
     result = []
-    for row in rows:
-        party_name = ""
-        if row.party_id:
-            party = db.query(Party).filter(Party.id == row.party_id).first()
-            party_name = party.name if party else ""
+
+    sales = db.query(Sale).filter(Sale.is_deleted == False).order_by(Sale.date.desc()).limit(limit).all()
+    for s in sales:
+        party = db.query(Party).filter(Party.id == s.party_id).first()
         result.append({
-            "type": row.type,
-            "id": row.id,
-            "date": row.date,
-            "amount": round(float(row.amount), 2),
-            "party_name": party_name,
+            "type": "sale", "id": s.id, "date": s.date,
+            "amount": round(s.total_amount, 2),
+            "party_name": party.name if party else "",
         })
-    return result
+
+    purchases = db.query(Purchase).filter(Purchase.is_deleted == False).order_by(Purchase.date.desc()).limit(limit).all()
+    for p in purchases:
+        party = db.query(Party).filter(Party.id == p.party_id).first()
+        result.append({
+            "type": "purchase", "id": p.id, "date": p.date,
+            "amount": round(p.total_cost, 2),
+            "party_name": party.name if party else "",
+        })
+
+    payments_in = db.query(PaymentIn).filter(PaymentIn.is_deleted == False).order_by(PaymentIn.date.desc()).limit(limit).all()
+    for p in payments_in:
+        party = db.query(Party).filter(Party.id == p.party_id).first()
+        result.append({
+            "type": "payment_in", "id": p.id, "date": p.date,
+            "amount": round(p.amount, 2),
+            "party_name": party.name if party else "",
+        })
+
+    payments_out = db.query(PaymentOut).filter(PaymentOut.is_deleted == False).order_by(PaymentOut.date.desc()).limit(limit).all()
+    for p in payments_out:
+        party = db.query(Party).filter(Party.id == p.party_id).first()
+        result.append({
+            "type": "payment_out", "id": p.id, "date": p.date,
+            "amount": round(p.amount, 2),
+            "party_name": party.name if party else "",
+        })
+
+    expenses = db.query(Expense).filter(Expense.is_deleted == False).order_by(Expense.date.desc()).limit(limit).all()
+    for e in expenses:
+        result.append({
+            "type": "expense", "id": e.id, "date": e.date,
+            "amount": round(e.amount, 2),
+            "party_name": "",
+        })
+
+    # Sort merged list by date descending and take top 'limit'
+    result.sort(key=lambda x: x["date"], reverse=True)
+    return result[:limit]

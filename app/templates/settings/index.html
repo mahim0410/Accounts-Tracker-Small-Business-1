@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Settings — Accounts Tracker{% endblock %}
+{% block content %}
+<h2>Settings</h2>
+
+{% if user.role.value != 'owner' %}
+<article style="text-align: center; color: var(--pico-muted-color);">
+    <p>⚙️ Settings are only available to the owner account.</p>
+</article>
+{% else %}
+
+<!-- Password Message -->
+{% if password_message %}
+<article style="background: {% if password_success %}var(--pico-ins-color){% else %}var(--pico-del-color){% endif %}; color: white; padding: 0.5rem 1rem;">
+    {{ password_message }}
+    <button class="outline" style="float: right; padding: 0 0.5rem; color: white;" onclick="this.parentElement.remove()">✕</button>
+</article>
+{% endif %}
+
+<!-- Change Password -->
+<article>
+    <header><h3>🔑 Change Password</h3></header>
+    <form method="POST" action="/settings/change-password">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <label>Current Password
+                <input type="password" name="old_password" required placeholder="Enter current password">
+            </label>
+            <label>New Password
+                <input type="password" name="new_password" required placeholder="Enter new password" minlength="4">
+            </label>
+        </div>
+        <button type="submit">Change Password</button>
+    </form>
+</article>
+
+<!-- Invite Codes -->
+<article>
+    <header><h3>📨 Invite Codes</h3></header>
+    <p>Generate invite codes to allow new staff users to register.</p>
+    <form method="POST" action="/settings/generate-invite" style="margin-bottom: 1rem;">
+        <div class="grid" style="grid-template-columns: 1fr 1fr auto; gap: 0.5rem;">
+            <label>Max Uses <small>(0 = unlimited)</small>
+                <input type="number" name="max_uses" min="0" value="0">
+            </label>
+            <label>Expires In (days) <small>(0 = never)</small>
+                <input type="number" name="expires_days" min="0" value="30">
+            </label>
+            <label style="visibility: hidden;">.</label>
+        </div>
+        <button type="submit" class="primary">Generate Code</button>
+    </form>
+
+    {% if invite_codes %}
+    <div style="overflow-x: auto;">
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Uses</th>
+                    <th>Max Uses</th>
+                    <th>Expires</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for code in invite_codes %}
+                <tr>
+                    <td><code>{{ code.code }}</code></td>
+                    <td>{{ code.uses }}</td>
+                    <td>{{ code.max_uses if code.max_uses > 0 else '∞' }}</td>
+                    <td>{{ code.expires_at or 'Never' }}</td>
+                    <td>
+                        <form method="POST" action="/settings/revoke-invite/{{ code.id }}" style="display: inline;" onsubmit="return confirm('Revoke this invite code?')">
+                            <button class="secondary outline small" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; color: var(--pico-del-color);">Revoke</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <article style="text-align: center; color: var(--pico-muted-color);">
+        <p>No invite codes generated yet.</p>
+    </article>
+    {% endif %}
+</article>
+
+<!-- Staff Users -->
+<article>
+    <header><h3>👥 Staff Users</h3></header>
+    {% if staff_users %}
+    <div style="overflow-x: auto;">
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for staff in staff_users %}
+                <tr>
+                    <td>{{ staff.name }}</td>
+                    <td>{% if staff.is_active %}<span style="color: var(--pico-ins-color);">Active</span>{% else %}<span style="color: var(--pico-del-color);">Inactive</span>{% endif %}</td>
+                    <td>{{ staff.created_at.strftime('%Y-%m-%d') if staff.created_at else '—' }}</td>
+                    <td>
+                        {% if staff.is_active %}
+                        <form method="POST" action="/settings/remove-user/{{ staff.id }}" style="display: inline;" onsubmit="return confirm('Remove {{ staff.name|e }}? This will deactivate the account.')">
+                            <button class="secondary outline small" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; color: var(--pico-del-color);">Remove</button>
+                        </form>
+                        {% else %}
+                        <span style="color: var(--pico-muted-color);">Removed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <article style="text-align: center; color: var(--pico-muted-color);">
+        <p>No staff users yet. Invite staff using invite codes above.</p>
+    </article>
+    {% endif %}
+</article>
+
+<!-- Backup -->
+<article>
+    <header><h3>💾 Backup</h3></header>
+    <p>Download the entire database as a SQLite file for safekeeping.</p>
+    <a href="/settings/download-backup" role="button" class="secondary">⬇️ Download Database</a>
+</article>
+
+{% endif %}
+{% endblock %}
