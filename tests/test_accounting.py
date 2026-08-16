@@ -295,9 +295,9 @@ def test_payment_in_reduces_ar(db):
 
 
 def test_dashboard_returns_200(client):
-    """Unauthenticated dashboard should return error."""
-    resp = client.get("/dashboard")
-    assert resp.status_code == 401
+    """Unauthenticated dashboard should redirect to login."""
+    resp = client.get("/dashboard", follow_redirects=False)
+    assert resp.status_code == 302  # redirect to /auth/login
 
 
 def test_authenticated_dashboard(client):

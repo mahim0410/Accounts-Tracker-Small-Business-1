@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -72,6 +73,15 @@ async def user_middleware(request: Request, call_next):
     request.state.user = await get_current_user(request)
     response: Response = await call_next(request)
     return response
+
+
+# ── 401 → Redirect to Login ────────────────────────────────────────
+
+@app.exception_handler(HTTPException)
+async def auth_exception_handler(request: Request, exc: HTTPException):
+    if exc.status_code == 401:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    return Response(content=str(exc.detail), status_code=exc.status_code)
 
 
 # ── Import & Include Routers ───────────────────────────────────────

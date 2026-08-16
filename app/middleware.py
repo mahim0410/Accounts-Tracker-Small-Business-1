@@ -4,6 +4,7 @@ Middleware for session management.
 from typing import Optional
 
 from fastapi import Request, Response
+from starlette.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.auth import validate_session_token
@@ -37,8 +38,8 @@ def require_auth(user: Optional[User]) -> User:
 
 def require_owner(user: Optional[User]) -> User:
     """Raise 403 if user is not the owner."""
-    from fastapi import HTTPException
     user = require_auth(user)
     if user.role.value != "owner":
+        from fastapi import HTTPException
         raise HTTPException(status_code=403, detail="Owner access required")
     return user
