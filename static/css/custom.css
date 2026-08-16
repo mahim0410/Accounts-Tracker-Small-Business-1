@@ -1,0 +1,136 @@
+/* Custom styles for Accounts Tracker */
+:root {
+    --bdtsymbol: "৳";
+}
+
+/* Currency display */
+.currency::before {
+    content: "৳";
+    margin-right: 0.1em;
+}
+
+/* Summary cards */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+}
+
+.summary-card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+
+.summary-card .label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+}
+
+/* Stock indicators */
+.stock-ok { color: var(--pico-ins-color); }
+.stock-warn { color: var(--pico-warning-color); }
+.stock-low { color: var(--pico-del-color); font-weight: bold; }
+
+/* Type badges */
+.badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-customer { background: #d1e7dd; color: #0f5132; }
+.badge-supplier { background: #cfe2ff; color: #084298; }
+.badge-both { background: #fff3cd; color: #664d03; }
+.badge-finished { background: #d1e7dd; color: #0f5132; }
+.badge-raw { background: #f8d7da; color: #842029; }
+.badge-income { background: #d1e7dd; color: #0f5132; }
+.badge-expense { background: #f8d7da; color: #842029; }
+.badge-credit { background: #fff3cd; color: #664d03; }
+.badge-cash { background: #e2e3e5; color: #41464b; }
+
+/* FAB menu */
+.fab-menu[open] summary {
+    background: var(--pico-primary-hover);
+}
+
+/* Mobile tables */
+@media (max-width: 640px) {
+    table {
+        font-size: 0.85rem;
+    }
+    .summary-card .value {
+        font-size: 1.5rem;
+    }
+    .hide-mobile {
+        display: none;
+    }
+}
+
+/* Filter row */
+.filter-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: end;
+    margin-bottom: 1rem;
+}
+
+.filter-row > * {
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-row button,
+.filter-row a[role="button"] {
+    flex: 0;
+    white-space: nowrap;
+}
+
+/* Low stock banner */
+.low-stock-banner {
+    background: var(--pico-warning-background);
+    border: 1px solid var(--pico-warning-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Action buttons in tables */
+.action-group {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+}
+
+.action-group a,
+.action-group button {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+/* Modal backdrop */
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+dialog article {
+    min-width: 300px;
+    max-width: 600px;
+}
+
+/* AR/AP balances */
+.ar-positive { color: var(--pico-del-color); font-weight: 600; }
+.ap-positive { color: var(--pico-del-color); font-weight: 600; }
+.balance-zero { color: var(--pico-ins-color); }

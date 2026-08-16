@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Accounts Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="/static/js/app.js" defer></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if user %}
+    <!-- Navigation -->
+    <nav class="container-fluid">
+        <ul>
+            <li><strong><a href="/dashboard">📊 Accounts Tracker</a></strong></li>
+        </ul>
+        <ul>
+            {% if user.role.value == 'owner' %}
+            <li><a href="/settings">⚙️ Settings</a></li>
+            {% endif %}
+            <li><a href="/auth/logout" role="button" class="secondary outline">Logout ({{ user.name }})</a></li>
+        </ul>
+    </nav>
+
+    <!-- Sub-navigation -->
+    <nav class="container-fluid" style="margin-top: -0.5rem;">
+        <ul>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/parties">Parties</a></li>
+            <li><a href="/inventory">Inventory</a></li>
+            <li><a href="/sales">Sales</a></li>
+            <li><a href="/purchases">Purchases</a></li>
+            <li><a href="/payments">Payments</a></li>
+            <li><a href="/expenses">Expenses</a></li>
+            <li><a href="/reports/profit-loss">Reports</a></li>
+        </ul>
+    </nav>
+    <hr>
+    {% endif %}
+
+    <!-- Flash messages / notifications -->
+    <div id="flash-container" class="container-fluid">
+        {% if error %}
+        <article style="background: var(--pico-del-color); color: white; padding: 0.5rem 1rem;">
+            {{ error }}
+            <button class="outline" style="float: right; padding: 0 0.5rem; color: white;" onclick="this.parentElement.remove()">✕</button>
+        </article>
+        {% endif %}
+        {% if success_message %}
+        <article style="background: var(--pico-ins-color); color: white; padding: 0.5rem 1rem;">
+            {{ success_message }}
+            <button class="outline" style="float: right; padding: 0 0.5rem; color: white;" onclick="this.parentElement.remove()">✕</button>
+        </article>
+        {% endif %}
+    </div>
+
+    <!-- Main content -->
+    <main class="container-fluid">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Quick Transaction FAB (for mobile) -->
+    {% if user %}
+    <details class="fab-menu" role="list" style="position: fixed; bottom: 1rem; right: 1rem; z-index: 1000;">
+        <summary aria-haspopup="listbox" role="button" class="primary" style="border-radius: 50%; width: 3.5rem; height: 3.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; padding: 0; cursor: pointer;">
+            +
+        </summary>
+        <ul role="listbox" style="position: absolute; bottom: 4rem; right: 0; min-width: 200px;">
+            <li><a href="#" onclick="openModal('sale-modal')">💰 New Sale</a></li>
+            <li><a href="#" onclick="openModal('payment-in-modal')">📥 Add Payment In</a></li>
+            <li><a href="#" onclick="openModal('payment-out-modal')">📤 Add Payment Out</a></li>
+        </ul>
+    </details>
+    {% endif %}
+
+    <!-- Modals (hidden, loaded on demand) -->
+    {% if user %}
+    {% include "components/_quick_sale_modal.html" %}
+    {% include "components/_quick_payment_in_modal.html" %}
+    {% include "components/_quick_payment_out_modal.html" %}
+    {% endif %}
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
